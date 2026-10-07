@@ -1,75 +1,75 @@
 # Experiment playbook
 
-Neural net *hỏng trong im lặng* (Karpathy). Playbook này tồn tại để lỗi lộ ra sớm và rẻ.
+Neural nets fail silently (Karpathy). This playbook exists so that failures surface early and cheaply.
 
-## Vòng thí nghiệm
+## The loop
 
 ```text
-PLAN.md → G3 (người dùng duyệt) → smoke → baseline + ceiling → runs có kiểm soát
-       → analyst: FINDINGS.md → skeptic → người dùng quyết → (thêm run | đổi giả thuyết | đóng)
+PLAN.md → G3 (the user approves) → smoke → baseline + ceiling → controlled runs
+       → analyst: FINDINGS.md → skeptic → the user decides → (more runs | change hypothesis | close)
 ```
 
-## Thiết kế (`/lab:design-exp`)
+## Design (`/lab:design-exp`)
 
-1. **Một câu hỏi.** Thí nghiệm trả lời đúng một câu hỏi. Hai câu hỏi thì hai PLAN.
-2. **Dự đoán trước.** `prediction` có hướng và độ lớn ("B hơn A ≥ 2 điểm"), `confidence` 0–100. Ghi vào calibration.
-3. **Kill criteria trước.** "Nếu sau N run / H giờ mà ... thì dừng."
-4. **Baseline và ceiling** (Steinhardt): baseline đơn giản nhất không phụ thuộc input, baseline chuẩn theo paper gần nhất, ceiling là bản "ăn gian" cho biết trần. Khoảng giữa baseline và ceiling là phần thưởng khả dĩ.
-5. **Ba nhóm hyperparameter** (Tuning Playbook): scientific (đang nghiên cứu), nuisance (phải tune để so sánh công bằng: tune *cả* baseline), fixed.
-6. **Seed.** So sánh chính cần ≥ 3 seed (Bouthillier et al.). Một seed chỉ dùng cho smoke và exploration.
-7. **File được bảo vệ.** Liệt kê code eval, code metric, test data trong `protected_files`. Hook chặn sửa khi plan `approved`/`running`.
-8. **Thứ tự de-risk** theo information rate: bước dễ hỏng nhất và rẻ nhất đi trước.
-9. **Phác kết quả trước** (Silver): bảng và hình mong đợi.
-10. **Ngân sách**: `budget_minutes_per_run`, `budget_total_hours`, `max_runs` theo compute profile trong `PROJECT.md`.
+1. **One question.** An experiment answers exactly one question. Two questions, two PLANs.
+2. **Prediction first.** `prediction` has a direction and a size ("B beats A by ≥ 2 points") and a `confidence` 0–100. Log it in calibration.
+3. **Kill criteria first.** "If after N runs / H hours ... then stop."
+4. **Baseline and ceiling** (Steinhardt): the simplest input-independent baseline, the standard baseline from the closest paper, and a ceiling that "cheats" to show the upper bound. The gap between baseline and ceiling is the room for reward.
+5. **Three groups of hyperparameters** (Tuning Playbook): scientific (being studied), nuisance (must be tuned for a fair comparison: tune the baseline *too*), fixed.
+6. **Seeds.** A main comparison needs ≥ 3 seeds (Bouthillier et al.). One seed is for smoke and exploration only.
+7. **Protected files.** List eval code, metric code and test data in `protected_files`. The hook blocks edits while the plan is `approved`/`running`.
+8. **De-risking order** by information rate: the step most likely to fail and cheapest goes first.
+9. **Sketch the result first** (Silver): the expected tables and figures.
+10. **Budget**: `budget_minutes_per_run`, `budget_total_hours`, `max_runs` from the compute profile in `PROJECT.md`.
 
 ## Leakage checklist (Kapoor & Narayanan)
 
-- [ ] không có tách train/test rõ ràng
-- [ ] tiền xử lý (normalize, impute, chọn feature, vocabulary) fit trên toàn bộ dữ liệu thay vì chỉ train
-- [ ] chọn model, early stopping hoặc tune hyperparameter trên test set
-- [ ] trùng lặp hoặc gần-trùng giữa train và test (dedup?)
-- [ ] feature không hợp lệ: thông tin không có ở thời điểm dự đoán, proxy của nhãn
-- [ ] tập test không đại diện cho phân phối mà claim nói tới
-- [ ] phụ thuộc thời gian: train dùng dữ liệu tương lai so với test
-- [ ] phụ thuộc nhóm: cùng người/bệnh nhân/tài liệu ở cả train và test
+- [ ] no clear train/test split
+- [ ] preprocessing (normalisation, imputation, feature selection, vocabulary) fitted on all the data instead of train only
+- [ ] model selection, early stopping or hyperparameter tuning on the test set
+- [ ] duplicates or near-duplicates between train and test (dedup?)
+- [ ] illegitimate features: information unavailable at prediction time, proxies of the label
+- [ ] test set not representative of the distribution the claim is about
+- [ ] temporal dependence: train uses data from the future relative to test
+- [ ] group dependence: the same person/patient/document in both train and test
 
-## Chạy (`/lab:run-exp`)
+## Running (`/lab:run-exp`)
 
-Mọi run đi qua `runwrap.py`:
+Every run goes through `runwrap.py`:
 
 ```bash
-python3 <plugin>/scripts/runwrap.py --exp <id> --name <variant> --tag <smoke|baseline|ceiling|main|ablation> --seed <n> [--config cfg.yaml] -- <lệnh train>
+python3 <plugin>/scripts/runwrap.py --exp <id> --name <variant> --tag <smoke|baseline|ceiling|main|ablation> --seed <n> [--config cfg.yaml] -- <train command>
 ```
 
-Script train báo metric bằng một trong hai cách:
+The training script reports metrics in one of two ways:
 
-- in dòng `LAB_METRIC val_acc=0.8312` (dòng cuối cùng của mỗi tên thắng);
-- ghi JSON `{"val_acc": 0.8312}` vào file `$LAB_METRICS_FILE`.
+- print a line `LAB_METRIC val_acc=0.8312` (the last line of each name wins);
+- write JSON `{"val_acc": 0.8312}` to the file `$LAB_METRICS_FILE`.
 
-Script nên đọc seed từ `$LAB_SEED`.
+The script should read its seed from `$LAB_SEED`.
 
-Thứ tự cứng:
+Fixed order:
 
-1. **Smoke** (`--tag smoke`, tập con, vài phút): từng mục smoke checklist trong PLAN.md. runwrap từ chối run thật khi chưa có smoke `ok`.
-2. **Baseline** và **ceiling**, đủ seed.
-3. **Run chính**: mỗi lần đổi một thứ so với baseline.
+1. **Smoke** (`--tag smoke`, a subset, a few minutes): each item of the smoke checklist in PLAN.md. runwrap refuses real runs until an `ok` smoke run exists.
+2. **Baseline** and **ceiling**, all seeds.
+3. **Main runs**: change one thing at a time relative to the baseline.
 
-Luật:
+Rules:
 
-- Commit code trước run chính; runwrap cảnh báo khi working tree bẩn.
-- Lỗi: đọc log, chẩn đoán, sửa *code*, chạy lại. Tối đa 3 lần cho cùng một lỗi; runwrap từ chối sau 3 run hỏng liên tiếp. Hết lượt thì halt-and-report kèm chẩn đoán.
-- Không bao giờ "sửa" bằng cách đổi eval, metric, test data hay giảm độ khó bài toán.
-- Không xoá run hỏng khỏi ledger. Run hỏng là dữ liệu.
-- Hết ngân sách (`max_runs`, giờ) thì dừng và báo; chỉ người dùng nâng ngân sách.
+- Commit the code before main runs; runwrap warns when the working tree is dirty.
+- Failure: read the log, diagnose, fix the *code*, rerun. At most 3 attempts for one failure; runwrap refuses after 3 failed runs in a row. Then halt and report with the diagnosis.
+- Never "fix" by changing the eval, the metric, the test data or the difficulty of the problem.
+- Never delete failed runs from the ledger. A failed run is data.
+- Out of budget (`max_runs`, hours): stop and report; only the user raises the budget.
 
-## Phân tích (`/lab:analyze`)
+## Analysis (`/lab:analyze`)
 
-1. `ledger.py table` và `stats.py summary` cho mọi variant; `stats.py compare` cho từng so sánh chính (ghép theo seed).
-2. `ledger.py figure` cho hình chính.
-3. FINDINGS.md bốn mục: dữ liệu cho thấy gì; *không* cho thấy gì; giải thích thay thế chưa bị loại; thí nghiệm kế tiếp nhiều thông tin nhất.
-4. Đối chiếu prediction, resolve calibration.
-5. Cảnh giác: CI chứa 0; n < 3; cherry-pick seed hoặc checkpoint; metric chính đổi giữa chừng; kết quả tốt bất thường (nghi leakage trước khi ăn mừng).
+1. `ledger.py table` and `stats.py summary` for every variant; `stats.py compare` for each main comparison (paired by seed).
+2. `ledger.py figure` for the main figure.
+3. FINDINGS.md has four parts: what the data shows; what it does *not* show; alternative explanations not yet ruled out; the most informative next experiment.
+4. Compare with the prediction and resolve the calibration entry.
+5. Watch for: a CI that contains 0; n < 3; cherry-picked seeds or checkpoints; a primary metric changed midway; an unusually good result (suspect leakage before celebrating).
 
-## "Thử X không chạy" (Steinhardt, Silver)
+## "Trying X did not work" (Steinhardt, Silver)
 
-Kết quả âm gần như không có thông tin nếu không biết *vì sao*. Mỗi kết quả âm cần ít nhất một giả thuyết về nguyên nhân và một cách kiểm rẻ.
+A negative result carries almost no information unless you know *why*. Every negative result needs at least one hypothesis about the cause and one cheap way to test it.

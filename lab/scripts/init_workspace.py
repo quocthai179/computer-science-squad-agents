@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Create the research/ workspace (idempotent; never overwrites existing files).
 
-usage: init_workspace.py [--project-dir DIR] [--title TITLE] [--no-claude-md]
+usage: init_workspace.py [--project-dir DIR] [--title TITLE] [--lang LANG] [--no-claude-md]
+
+--lang picks the language of the generated files: en (default), vi, zh, fr, ja.
 """
 
 from __future__ import annotations
@@ -10,7 +12,8 @@ import argparse
 import re
 from pathlib import Path
 
-from _lab import TEMPLATES, today
+from _lab import (DEFAULT_LANG, LANG_NAMES, SUPPORTED_LANGS, TEMPLATES, normalize_lang, die, resolve_language,
+                  template_path, today)
 
 DIRS = [
     "notebook",
@@ -43,13 +46,14 @@ experiments/*/runs/
 BEGIN, END = "<!-- lab:begin -->", "<!-- lab:end -->"
 
 
-def claude_md_block() -> str:
-    return (TEMPLATES / "CLAUDE-snippet.md").read_text(encoding="utf-8").strip()
+def claude_md_block(lang: str) -> str:
+    text = (TEMPLATES / "CLAUDE-snippet.md").read_text(encoding="utf-8").strip()
+    return text.replace("{{language}}", f"{lang} ({LANG_NAMES[lang]})")
 
 
-def upsert_claude_md(project_dir: Path) -> str:
+def upsert_claude_md(project_dir: Path, lang: str) -> str:
     path = project_dir / "CLAUDE.md"
-    block = f"{BEGIN}\n{claude_md_block()}\n{END}"
+    block = f"{BEGIN}\n{claude_md_block(lang)}\n{END}"
     if not path.exists():
         path.write_text(block + "\n", encoding="utf-8")
         return "created"
@@ -68,11 +72,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project-dir", default=".", help="repo root that will contain research/")
     ap.add_argument("--title", default="", help="project title written into PROJECT.md")
+    ap.add_argument("--lang", help="en (default), vi, zh, fr, ja; also accepts names like 'French' or '日本語'")
     ap.add_argument("--no-claude-md", action="store_true", help="do not touch CLAUDE.md")
     args = ap.parse_args()
 
     project = Path(args.project_dir).resolve()
     root = project / "research"
+    if args.lang and not normalize_lang(args.lang):
+        die(f"unsupported language '{args.lang}'. Supported: {', '.join(SUPPORTED_LANGS)}")
+    # an existing workspace keeps its language unless --lang is given
+    lang = resolve_language(root if (root / "PROJECT.md").exists() else None, default=DEFAULT_LANG, explicit=args.lang)
     created = []
 
     for d in DIRS:
@@ -85,8 +94,9 @@ def main() -> None:
         p = root / rel
         if p.exists():
             continue
-        text = (TEMPLATES / tpl).read_text(encoding="utf-8")
-        text = text.replace("{{date}}", today()).replace("{{title}}", args.title or "<tên đề tài>")
+        text = template_path(tpl, lang).read_text(encoding="utf-8")
+        text = text.replace("{{date}}", today()).replace("{{title}}", args.title or "<title>")
+        text = text.replace("{{language}}", lang)
         p.write_text(text, encoding="utf-8")
         created.append(rel)
 
@@ -106,9 +116,9 @@ def main() -> None:
         nb.write_text(f"# {today()}\n", encoding="utf-8")
         created.append(f"notebook/{nb.name}")
 
-    claude = "skipped" if args.no_claude_md else upsert_claude_md(project)
+    claude = "skipped" if args.no_claude_md else upsert_claude_md(project, lang)
 
-    print(f"workspace: {root}")
+    print(f"workspace: {root} (language: {lang}, {LANG_NAMES[lang]})")
     print("created: " + (", ".join(created) if created else "nothing (already initialised)"))
     print(f"CLAUDE.md: {claude}")
 

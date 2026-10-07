@@ -1,6 +1,8 @@
 {
   "name": "computer-science-squad-agents",
-  "owner": { "name": "Thai Huynh" },
+  "owner": {
+    "name": "Thai Huynh"
+  },
   "metadata": {
     "description": "Claude Code plugins for computer science research and engineering work"
   },
@@ -8,7 +10,7 @@
     {
       "name": "lab",
       "source": "./lab",
-      "description": "Research Squad: 7 subagents and 11 /lab:* skills for AI/ML literature surveys, paper reading, experiments with a run ledger, write-ups and retros"
+      "description": "Research Squad: 7 subagents and 11 /lab:* skills for AI/ML literature surveys, paper reading, experiments with a run ledger, write-ups and retros. English by default; also Vietnamese, Chinese, French, Japanese."
     }
   ]
 }

@@ -6,7 +6,7 @@ status: proposed          # proposed | selected | pilot | parked | killed | done
 seeds: []                 # nguồn hạt giống: gaps.md, FINDINGS bất thường, backlog...
 prediction: <kết quả cụ thể của phép thử rẻ nhất>
 confidence: <0-100>
-closest_prior_work: <skeptic điền: [@paper-id] và khác biệt; để trống nếu chưa kiểm>
+closest_prior_work: <Lead chép từ review của skeptic: [@paper-id] và khác biệt; để trống nếu chưa kiểm>
 user_score: <1-10, người dùng chấm trước khi chạy>
 ---
 

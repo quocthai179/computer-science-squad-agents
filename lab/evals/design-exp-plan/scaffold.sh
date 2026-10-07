@@ -11,7 +11,7 @@ cat > $R/PROJECT.md <<'X'
 title: Regularisation for small-data text classification
 stage: understanding
 north_star: find which cheap regularisers help fine-tuning on < 5k examples
-language: vi
+language: en
 compute_gpu: 1x RTX 3060 12GB
 compute_max_minutes_per_run: 20
 compute_hours_per_week: 6

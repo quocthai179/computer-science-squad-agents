@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: critique-zh
+description: A Chinese request triggers /lab:critique on a report with five planted defects; the review file and the reply are in Chinese, the verdict key stays English, and the five defects are all named.
+tags: [i18n, zh, review]
+runs: 3
+context:
+  scaffold_script: scaffold.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Skill, Agent, Bash, Write]

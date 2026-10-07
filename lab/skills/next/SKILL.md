@@ -1,26 +1,28 @@
 ---
 name: next
-description: Trả lời đúng một câu - việc nhiều thông tin nhất trên một đơn vị thời gian cho đề tài nghiên cứu ngay lúc này là gì, và vì sao - dựa trên stage, việc dở dang, thí nghiệm, survey và lesson trong research/. Dùng khi người dùng hỏi "giờ làm gì tiếp", "bước tiếp theo", "what should I do next", "nên ưu tiên gì".
+description: Answer in exactly one sentence - what is the most informative thing per unit time to do next on this research project, and why - based on the stage, unfinished work, experiments, surveys and lessons in research/. Use for "what should I do next", "next step", "what to prioritise". Also - giờ làm gì tiếp, bước tiếp theo; 下一步做什么, 该优先做什么; que faire ensuite, prochaine étape; 次に何をすべきか, 優先順位.
 ---
 
 # /lab:next
 
-Bạn là Lead. Trả lời ngắn, không gọi subagent, không bắt đầu làm việc được đề xuất.
+You are the Lead. Answer briefly, call no subagents, and do not start the work you suggest.
 
-## Bước
+Language: the project language is `language:` in `research/PROJECT.md`; if it is blank, the plugin default `${user_config.language}` (if that still shows as the literal text `${user_config.language}`, the option is unset: use English) (rules in ${CLAUDE_PLUGIN_ROOT}/playbooks/language.md). Reply to the user in the language they write in. Put `language: <code>` in every TASK BRIEF.
 
-1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/retro_digest.py --status-only`. Chưa có workspace: câu trả lời là `/lab:setup`.
-2. Đọc `research/PROJECT.md` (stage, north star, deadline), `research/lessons/LESSONS.md`, và các file mà digest liệt kê là dở dang (PLAN.md, FINDINGS.md, claims.md) khi cần.
-3. Chọn **một** việc theo thứ tự ưu tiên (Steinhardt: nhiều thông tin nhất trên một đơn vị thời gian, de-risk trước execute; Schulman: hoàn tất việc dở dang trước khi mở việc mới):
-   1. thứ đang chặn: run hỏng chờ chẩn đoán, PLAN chờ G3, claims chờ G4;
-   2. kết quả chưa phân tích (có run `ok` nhưng chưa có FINDINGS.md) → `/lab:analyze`;
-   3. thí nghiệm đang chạy chưa đủ seed hoặc chưa có baseline/ceiling;
-   4. việc phù hợp stage: exploration → survey/read-paper; ideation → ideate; understanding → design-exp cho giả thuyết đang dẫn đầu; distillation → write-up;
-   5. retro đã quá 7 ngày → `/lab:retro`.
-4. Trả lời đúng dạng:
+## Steps
+
+1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/retro_digest.py --status-only`. No workspace: the answer is `/lab:setup`.
+2. Read `research/PROJECT.md` (stage, north star, deadline), `research/lessons/LESSONS.md`, and the files the digest lists as unfinished (PLAN.md, FINDINGS.md, claims.md) when needed.
+3. Choose **one** item in this priority order (Steinhardt: most information per unit time, de-risk before execute; Schulman: finish unfinished work before opening new work):
+   1. whatever is blocking: a failed run waiting for diagnosis, a PLAN waiting for G3, claims waiting for G4;
+   2. results not yet analysed (`ok` runs but no FINDINGS.md) → `/lab:analyze`;
+   3. a running experiment without enough seeds or without baseline/ceiling;
+   4. work that fits the stage: exploration → survey/read-paper; ideation → ideate; understanding → design-exp for the leading hypothesis; distillation → write-up;
+   5. the last retro is more than 7 days old → `/lab:retro`.
+4. Answer in exactly this form, in the user's language:
 
 ```text
-Việc tiếp theo: <một việc cụ thể, kèm lệnh /lab:... nếu có>
-Vì sao: <một câu: nó cho nhiều thông tin nhất / gỡ chặn gì>
-Bỏ qua lúc này: <một việc hấp dẫn nhưng nên để sau, và vì sao>
+Next: <one concrete thing, with the /lab:... command if any>
+Why: <one sentence: it gives the most information / unblocks what>
+Skip for now: <one tempting thing that should wait, and why>
 ```

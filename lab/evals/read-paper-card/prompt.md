@@ -1,1 +1,1 @@
-Mình có file paper ở `papers-inbox/toy-paper.md`. Đọc kỹ giúp mình, làm paper card để sau này tra lại, rồi hỏi mình vài câu để kiểm tra xem mình hiểu chưa.
+I have a paper at `papers-inbox/toy-paper.md`. Please read it carefully, make a paper card so I can look it up later, and then ask me a few questions to check whether I understood it.

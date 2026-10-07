@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: 'leak|rò rỉ|rò dữ liệu'
+pattern: 'leak'
 flags: i
 ---

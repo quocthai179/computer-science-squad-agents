@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: '(một|1|single|one|duy nhất)\s+seed|seed\s+duy nhất|chỉ\s+(\S+\s+){0,3}seed|n\s*=\s*1'
+pattern: '(single|one|1|only)\s+(\S+\s+){0,2}seeds?|seeds?\s+(\S+\s+){0,3}(only|just)|n\s*=\s*1'
 flags: i
 ---

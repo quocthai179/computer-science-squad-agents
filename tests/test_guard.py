@@ -33,3 +33,9 @@ def test_protected_files_depend_on_plan_status(project, experiment):
 def test_garbage_input_never_blocks(project):
     r = run_script("guard_generated.py", cwd=project, input="not json")
     assert r.returncode == 0
+
+
+def test_protected_files_with_trailing_comment_in_plan(project, experiment):
+    (experiment / "PLAN.md").write_text(PLAN_APPROVED.replace(
+        "protected_files: [eval.py, data/test.jsonl]", "protected_files: [eval.py]   # eval, metric, test data"))
+    assert guard(project, "Edit", project / "eval.py").returncode == 2
