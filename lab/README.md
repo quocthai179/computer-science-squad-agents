@@ -10,6 +10,30 @@ Ba thứ plugin thêm vào so với một lần "deep research" thông thường
 
 Thiết kế đầy đủ và nguồn tham khảo: kế hoạch "Research Squad" bản 0.1 (2026-10-07).
 
+## Demo
+
+Ảnh chụp từ các lần chạy thật trong Claude Code. Đầu vào là fixture của bộ eval, nên có thể chạy lại được ([cách tái tạo](../docs/screenshots/capture/README.md)).
+
+**`/lab:critique`: phản biện độc lập.** Lead chỉ đưa đường dẫn cho `lab:skeptic`, không đưa lập luận. Báo cáo thí nghiệm này được cài sẵn năm lỗi, và skeptic gọi đúng tên cả năm, kèm số dòng.
+
+![lab:skeptic đang review FINDINGS.md](../docs/screenshots/critique-running.png)
+
+![Verdict reject với năm lỗi chặn](../docs/screenshots/critique-verdict.png)
+
+**`/lab:read-paper`: đọc sâu và explain-back.** `lab:reader` đọc full text rồi viết paper card. Lead trả về tóm tắt và ba câu hỏi để bạn tự kiểm tra mức hiểu. Paper ở đây là paper tổng hợp viết riêng cho eval; reader tự phát hiện bằng chứng yếu mà nó cài sẵn (tune không công bằng, báo best of 3 seeds).
+
+![lab:reader chạy nền](../docs/screenshots/read-running.png)
+
+![Paper card, tóm tắt và câu hỏi explain-back](../docs/screenshots/read-card.png)
+
+**Guardrail bằng script, không bằng prompt.** `runwrap.py` từ chối chạy khi PLAN chưa được duyệt (G3) và khi chưa có smoke run; mọi run vào ledger kèm git SHA.
+
+![runwrap từ chối, rồi smoke run và 6 run chính](../docs/screenshots/guardrails.png)
+
+**Thống kê ghép theo seed.** Thí nghiệm đồ chơi (logistic regression trên dữ liệu tổng hợp): label smoothing không giúp gì, và `stats.py` nói thẳng điều đó vì CI 95% của hiệu chứa 0.
+
+![stats.py compare: CI chứa 0](../docs/screenshots/stats.png)
+
 ## Cài đặt
 
 Yêu cầu: Claude Code (eval cần v2.1.269 trở lên), `python3` ≥ 3.10 trên `PATH`. Script chỉ dùng thư viện chuẩn; `pdftotext` (poppler) là tuỳ chọn để có bản text của PDF.

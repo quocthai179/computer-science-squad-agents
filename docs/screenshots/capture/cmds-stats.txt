@@ -1,0 +1,4 @@
+#!export LAB=$LAB_SCRIPTS
+#clear
+python3 $LAB/ledger.py list --exp e001-ls
+python3 $LAB/stats.py compare --exp e001-ls --metric test_acc --a ls0 --b ls0.2 --out ls0-vs-ls0.2.md
