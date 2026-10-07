@@ -1,0 +1,1 @@
+Mình muốn lên kế hoạch thí nghiệm cho ý tưởng i001-label-smoothing, đặt mã thí nghiệm là e001-ls. Dự đoán của mình: label smoothing 0.1 tăng test accuracy ít nhất 1 điểm trên TinySent (1k mẫu train), mình tin khoảng 60%. Nếu sau 6 run chính mà không hơn baseline thì bỏ. Phần còn lại bạn cứ đề xuất theo máy của mình rồi để mình duyệt sau, hôm nay mình chưa chạy gì cả.

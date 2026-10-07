@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: critique-planted-bugs
+description: /lab:critique on an experiment report with five planted defects (leakage, missing baseline, single seed, cherry-picking, a number not in the ledger) names each defect.
+tags: [smoke, review]
+runs: 3
+context:
+  scaffold_script: scaffold.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Skill, Agent, Bash, Write]

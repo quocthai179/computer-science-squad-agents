@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: next-step-analyze
+description: With finished but unanalysed runs in the ledger, /lab:next recommends exactly one action - analysing e001 - instead of starting new work.
+tags: [planning]
+runs: 3
+context:
+  scaffold_script: scaffold.sh
+execution:
+  max_turns: 15
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Bash]
