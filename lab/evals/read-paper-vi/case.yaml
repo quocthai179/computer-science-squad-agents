@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: read-paper-vi
+description: A Vietnamese request triggers /lab:read-paper; the card follows templates/vi and the reply asks the explain-back questions in Vietnamese.
+tags: [i18n, vi]
+runs: 3
+context:
+  scaffold_script: scaffold.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Skill, Agent, Bash, Write, Edit]

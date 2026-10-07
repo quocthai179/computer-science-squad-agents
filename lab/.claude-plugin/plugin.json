@@ -2,10 +2,36 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "lab",
   "displayName": "Research Squad",
-  "version": "0.1.0",
-  "description": "Đội agent hỗ trợ nghiên cứu AI/ML: khảo sát, đọc paper, thí nghiệm, viết, rút kinh nghiệm",
-  "author": { "name": "Thai Huynh" },
+  "version": "0.2.0",
+  "description": "A squad of subagents for AI/ML research: literature surveys, paper reading, experiments with a run ledger, write-ups and retros. English by default; also Vietnamese, Chinese, French and Japanese.",
+  "author": {
+    "name": "Thai Huynh"
+  },
   "repository": "https://github.com/quocthai179/computer-science-squad-agents",
   "license": "MIT",
-  "keywords": ["research", "machine-learning", "literature-review", "experiments", "multi-agent", "vietnamese"]
+  "keywords": [
+    "research",
+    "machine-learning",
+    "literature-review",
+    "experiments",
+    "multi-agent",
+    "vietnamese",
+    "multilingual",
+    "i18n"
+  ],
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Workspace language",
+      "description": "Default language of notes, cards, plans, reviews and reports: en (English), vi (Tiếng Việt), zh (中文), fr (Français) or ja (日本語). A project can override it with `language:` in research/PROJECT.md.",
+      "options": [
+        "en",
+        "vi",
+        "zh",
+        "fr",
+        "ja"
+      ],
+      "default": "en"
+    }
+  }
 }

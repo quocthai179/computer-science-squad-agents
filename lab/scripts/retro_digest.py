@@ -20,11 +20,13 @@ from _lab import find_root, read_frontmatter, read_jsonl
 from calibration import report as calib_report
 
 LESSON_CAP = 50
+# the "Next steps" heading of retro.md in en / vi / zh / fr / ja
+NEXT_STEPS_HEADING = r"(next steps|bước tiếp|việc tiếp|下一步|下一步行动|prochaines? étapes|次のステップ|今後の予定)"
 
 
 def section(text: str, heading_re: str) -> str:
-    m = re.search(rf"^##+\s*{heading_re}.*?$(.*?)(?=^##\s|\Z)", text, re.M | re.S | re.I)
-    return m.group(1).strip() if m else ""
+    m = re.search(rf"^##+[ \t]*(?:{heading_re})[^\n]*\n(?P<body>.*?)(?=^##\s|\Z)", text, re.M | re.S | re.I)
+    return m.group("body").strip() if m else ""
 
 
 def open_work(root: Path) -> list[str]:
@@ -104,7 +106,7 @@ def main() -> None:
     retros = sorted((root / "lessons" / "retros").glob("*.md")) if (root / "lessons" / "retros").exists() else []
     print("## Last retro's next steps\n")
     if retros:
-        nxt = section(retros[-1].read_text(encoding="utf-8"), r"(next steps|bước tiếp|việc tiếp)")
+        nxt = section(retros[-1].read_text(encoding="utf-8"), NEXT_STEPS_HEADING)
         print(f"(from {retros[-1].name})\n\n{nxt or '(section not found)'}")
     else:
         print("- no previous retro")

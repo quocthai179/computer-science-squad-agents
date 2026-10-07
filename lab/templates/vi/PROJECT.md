@@ -3,7 +3,7 @@ title: {{title}}
 stage: exploration        # ideation | exploration | understanding | distillation
 north_star: <một câu: điều bạn muốn biết hoặc làm được khi đề tài xong>
 created: {{date}}
-language: vi              # ngôn ngữ ghi chú và báo cáo; draft paper: en
+language: {{language}}
 compute_gpu: <ví dụ: 1x RTX 4090 24GB, hoặc CPU only>
 compute_max_minutes_per_run: 30
 compute_hours_per_week: 10

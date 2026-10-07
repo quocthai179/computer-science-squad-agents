@@ -1,28 +1,30 @@
 ---
 name: ideate
-description: Tìm và sàng lọc ý tưởng nghiên cứu: ideator sinh idea card Heilmeier từ hạt giống đa dạng (gaps, bất thường, backlog, lợi thế riêng), skeptic chạy novelty protocol tìm prior work, người dùng chấm và chọn (G2). Dùng khi người dùng muốn "tìm ý tưởng", "brainstorm hướng nghiên cứu", "ideate", "research ideas", "đề tài nên làm gì".
-argument-hint: "[trọng tâm]"
+description: Find and screen research ideas - the ideator writes Heilmeier idea cards from diverse seeds (gaps, anomalies, backlog, unfair advantage), the skeptic runs the novelty protocol looking for prior work, the user scores and chooses (G2). Use for "find ideas", "brainstorm research directions", "what should I work on". Also - tìm ý tưởng, brainstorm hướng nghiên cứu; 寻找研究想法, 头脑风暴研究方向; trouver des idées de recherche, brainstorming; アイデア出し, 研究テーマの案.
+argument-hint: "[focus]"
 ---
 
 # /lab:ideate
 
-Bạn là Lead. Khung: generate → reflect → evolve → người dùng xếp hạng.
+You are the Lead. Frame: generate → reflect → evolve → the user ranks.
 
-Luật luôn đúng:
-- Người dùng chấm và chọn (G2). Xếp hạng của agent chỉ để tham khảo; LLM xếp hạng ý tưởng gần mức ngẫu nhiên.
-- Đa dạng hoá **đầu vào**, không sinh thêm mẫu từ cùng một prompt.
-- Không ai trong đội tuyên bố novelty. Người dùng chịu trách nhiệm mọi tuyên bố đó.
+Language: the project language is `language:` in `research/PROJECT.md`; if it is blank, the plugin default `${user_config.language}` (if that still shows as the literal text `${user_config.language}`, the option is unset: use English) (rules in ${CLAUDE_PLUGIN_ROOT}/playbooks/language.md). Reply to the user in the language they write in. Put `language: <code>` in every TASK BRIEF.
 
-Trọng tâm: $ARGUMENTS
+Rules that always hold:
+- The user scores and chooses (G2). The agents' ranking is advisory only; LLM rankings of ideas are close to chance.
+- Diversify the **inputs**; do not sample more from the same prompt.
+- Nobody in the squad claims novelty. The user owns every such claim.
 
-## Bước
+Focus: $ARGUMENTS
 
-1. Đọc `research/PROJECT.md` (mục "Lợi thế riêng", ràng buộc, compute), `research/lessons/LESSONS.md`, ${CLAUDE_PLUGIN_ROOT}/playbooks/ideation.md. Chưa có workspace: bảo người dùng chạy `/lab:setup` rồi dừng.
-2. Gom hạt giống, ghi danh sách đường dẫn: `research/surveys/*/gaps.md`, `research/experiments/*/FINDINGS.md` (mục bất thường, "vì sao không chạy"), `research/ideas/backlog.md`, paper card có mục "Mở khoá bài toán". Thêm một ràng buộc cụ thể, ví dụ "pilot chạy được trong một giờ trên máy hiện có". Hạt giống quá ít (< 3 nguồn): nói với người dùng và đề nghị `/lab:survey` trước, hoặc hỏi họ 2–3 bài toán họ quan tâm.
-3. Gọi `lab:ideator` chế độ `generate`: 6–10 card trong `research/ideas/cards/`, template `${CLAUDE_PLUGIN_ROOT}/templates/idea-card.md`.
-4. Gọi `lab:skeptic` loại `idea` với đường dẫn các card mới (một skeptic cho cả lô, `budget: 40 tool call`). Review vào `research/reviews/ideas-<YYYY-MM-DD>.md`.
-5. Với mỗi dòng `closest_prior_work[<id>]: ...` trong review: chép vào frontmatter `closest_prior_work` của card tương ứng và mục "Phản biện". Card không có dòng đó thì để trống.
-6. Gọi `lab:ideator` chế độ `evolve` với đường dẫn review: một vòng gộp, đơn giản hoá, loại bỏ.
-7. **G2.** Trình người dùng bảng: id, tên, nhãn safe/ambitious, prediction, phép thử rẻ nhất, prior work gần nhất, lý do thất bại mạnh nhất. **Không** hiện điểm gợi ý của agent trước khi người dùng chấm. Mời người dùng chấm từng card 1–10 và chọn 1–2 card. Phép thử nhanh: "Nếu nhóm khác công bố đúng ý này, bạn có háo hức đọc không?"
-8. Ghi `user_score` vào từng card; card được chọn `status: selected`; card bị loại `status: parked` hoặc `killed` kèm lý do. Ghi `research/decisions.md`.
-9. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/notebook.py add --source ideate "<số card>, chọn <ids>"`. Gợi ý: `/lab:design-exp <idea-id>` cho một pilot tối đa một ngày.
+## Steps
+
+1. Read `research/PROJECT.md` ("Unfair advantage", constraints, compute), `research/lessons/LESSONS.md`, ${CLAUDE_PLUGIN_ROOT}/playbooks/ideation.md. No workspace: tell the user to run `/lab:setup` and stop.
+2. Collect seeds and list their paths: `research/surveys/*/gaps.md`, `research/experiments/*/FINDINGS.md` (anomalies, "why it did not run"), `research/ideas/backlog.md`, paper cards with "Which backlog problem does it unlock". Add one concrete constraint, for example "the pilot must run in an hour on the current machine". Too few seeds (< 3 sources): say so and suggest `/lab:survey` first, or ask the user for 2–3 problems they care about.
+3. Call `lab:ideator` in mode `generate`: 6–10 cards in `research/ideas/cards/`, template `${CLAUDE_PLUGIN_ROOT}/templates/<language>/idea-card.md`.
+4. Call `lab:skeptic` with type `idea` and the paths of the new cards (one skeptic for the whole batch, `budget: 40 tool calls`). Review at `research/reviews/ideas-<YYYY-MM-DD>.md`.
+5. For each line `closest_prior_work[<id>]: ...` in the review: copy it into the `closest_prior_work` frontmatter field of that card and into its "Critique" section. A card without such a line stays empty.
+6. Call `lab:ideator` in mode `evolve` with the review path: one round of merging, simplifying and dropping.
+7. **G2.** Show the user a table: id, title, safe/ambitious label, prediction, cheapest test, closest prior work, the strongest reason it could fail. **Do not** show the agent's suggested scores before the user has scored. Invite the user to score each card 1–10 and choose 1–2. Quick test: "If another group published exactly this idea, would you be excited to read it?"
+8. Write `user_score` in each card; chosen cards get `status: selected`; rejected ones `status: parked` or `killed` with the reason. Record in `research/decisions.md`.
+9. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/notebook.py add --source ideate "<number of cards>, chose <ids>"`. Suggest: `/lab:design-exp <idea-id>` for a pilot of at most one day.

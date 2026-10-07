@@ -1,51 +1,54 @@
-# Handoff: TASK BRIEF và RECEIPT
+# Handoff: TASK BRIEF and RECEIPT
 
-Subagent khởi động với context trống: nó không thấy hội thoại và không thấy file Lead đã đọc. Nó có nạp `CLAUDE.md` của repo. `TASK BRIEF` vì thế phải tự đứng được.
+A subagent starts with an empty context: it sees neither the conversation nor the files the Lead has read. It does load the repo's `CLAUDE.md`. A `TASK BRIEF` must therefore stand on its own.
 
 ## TASK BRIEF (Lead → subagent)
 
 ```text
 TASK BRIEF
-objective:   <một câu, kết quả cần có>
-inputs:      <đường dẫn file; không dán nội dung>
-output:      <đường dẫn và template phải theo>
-playbook:    <đường dẫn tuyệt đối tới playbook liên quan>
-boundaries:  <không làm gì; phạm vi nguồn, thời gian>
-budget:      <số tool call, phút compute, số vòng>
-stop_when:   <điều kiện xong>; halt-and-report nếu <điều kiện>
+objective:   <one sentence: the result that must exist>
+language:    <en|vi|zh|fr|ja: the project language>
+inputs:      <file paths; do not paste content>
+output:      <path and the template to follow>
+playbook:    <absolute path of the relevant playbook>
+boundaries:  <what not to do; scope of sources, time>
+budget:      <number of tool calls, compute minutes, rounds>
+stop_when:   <done condition>; halt-and-report if <condition>
 ```
 
-Luật viết brief:
+Rules for writing a brief:
 
-- `objective` là kết quả, không phải hoạt động: "danh sách 10–20 paper về X có điểm relevance" chứ không phải "tìm hiểu về X".
-- `inputs` chỉ là đường dẫn. Dán nội dung vào brief làm hỏng nguyên tắc "file là giao thức" và làm phình context.
-- `boundaries` nói rõ góc nào thuộc agent khác để tránh trùng việc giữa các scout chạy song song.
-- `budget` là trần cứng. Agent hết ngân sách thì dừng và trả `status: partial`.
-- Gửi đường dẫn tuyệt đối tới template và playbook, vì subagent không biết thư mục plugin.
+- `objective` is a result, not an activity: "a list of 10–20 papers on X with relevance scores", not "look into X".
+- `inputs` are paths only. Pasting content defeats "files are the protocol" and bloats the context.
+- `boundaries` says which angles belong to other agents so parallel scouts do not overlap.
+- `budget` is a hard cap. An agent that runs out stops and returns `status: partial`.
+- Give absolute paths to templates and playbooks: a subagent does not know the plugin directory. Templates live in `templates/<language>/`.
 
 ## RECEIPT (subagent → Lead)
 
 ```text
 RECEIPT
 status:      done | partial | blocked
-outputs:     <đường dẫn>
-findings:    <tối đa 3 dòng>
-open:        <câu hỏi, nghi ngờ>
-confidence:  low | medium | high, kèm lý do
-escalate:    none | model | user: <cần gì>
+outputs:     <paths>
+findings:    <at most 3 lines>
+open:        <questions, doubts>
+confidence:  low | medium | high, with the reason
+escalate:    none | model | user: <what is needed>
 ```
 
-Luật nhận receipt:
+The receipt is written in the project language except for the keys and the fixed values (`done`, `partial`, `blocked`, `low`, `none`...).
 
-- Lead đọc file trong `outputs`, không tin `findings` thay cho file.
-- `status: blocked` hoặc `escalate: user` → Lead đưa lên người dùng, không tự đoán.
-- `escalate: model` → gọi lại cùng brief với `model: opus`, một lần.
-- Receipt không theo mẫu, hoặc agent làm việc ngoài `boundaries` → ghi một dòng vào `research/lessons/squad-issues.md`.
+Rules for reading a receipt:
 
-## Ghi chép
+- The Lead reads the files in `outputs`, and does not trust `findings` instead of the file.
+- `status: blocked` or `escalate: user` → bring it to the user; do not guess.
+- `escalate: model` → call again with the same brief and `model: opus`, once.
+- A receipt that does not follow the format, or work outside `boundaries` → add one line to `research/lessons/squad-issues.md`.
 
-Sau mỗi workflow Lead ghi một mục notebook:
+## Notebook
+
+After each workflow the Lead adds a notebook entry:
 
 ```bash
-python3 <plugin>/scripts/notebook.py add --source <skill> "<3–6 dòng: làm gì, ra artifact nào, còn mở gì>"
+python3 <plugin>/scripts/notebook.py add --source <skill> "<3–6 lines: what was done, which artifacts, what is still open>"
 ```

@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: '(thiếu|không có|chưa có|chưa chạy|không chạy|missing|no)\s+(\S+\s+){0,3}baseline|baseline\s+(\S+\s+){0,6}(thiếu|không được chạy|chưa chạy|lấy từ paper|from the paper|not run)'
+pattern: '(missing|no|without|never (run|ran))\s+(\S+\s+){0,3}baseline|baseline\s+(\S+\s+){0,6}(missing|was never|not run|from the (original )?paper|no run)'
 flags: i
 ---

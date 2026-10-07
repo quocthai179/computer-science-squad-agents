@@ -1,1 +1,1 @@
-Giờ mình nên làm gì tiếp theo cho đề tài này? Chỉ cần nói một việc thôi.
+What should I do next on this project? Just tell me one thing.

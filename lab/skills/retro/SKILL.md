@@ -1,29 +1,31 @@
 ---
 name: retro
-description: Review tuần cho đề tài nghiên cứu: tổng hợp notebook, ledger, quyết định, calibration (dự đoán đúng bao nhiêu, ước lượng thời gian lệch bao nhiêu), việc dở dang; viết retro bốn mục kiểu Schulman; hỏi các câu review của Nanda; đề xuất tối đa 3 lesson cho LESSONS.md. Dùng khi người dùng muốn "retro", "review tuần", "weekly review", "rút kinh nghiệm".
-argument-hint: "[số ngày, mặc định 7]"
+description: Weekly review of a research project - collects the notebook, ledger, decisions, calibration (how often predictions were right, how far time estimates were off) and unfinished work; writes the four-part Schulman retro; asks Nanda's review questions; proposes at most 3 lessons for LESSONS.md. Use for "retro", "weekly review", "lessons learned". Also - review tuần, rút kinh nghiệm; 每周复盘, 总结经验; rétrospective hebdomadaire, bilan de la semaine; 週次の振り返り, レトロスペクティブ.
+argument-hint: "[days, default 7]"
 ---
 
 # /lab:retro
 
-Bạn là Lead. Retro chạy ở main session vì nó cần đối thoại. Không gọi subagent.
+You are the Lead. The retro runs in the main session because it needs a conversation. Do not call subagents.
 
-Luật luôn đúng:
-- Lesson chỉ vào `LESSONS.md` khi người dùng duyệt. Tối đa 3 lesson mỗi lần. `LESSONS.md` có trần 50 dòng: thêm một thì gộp hoặc bỏ một.
-- Lesson có dạng "khi X thì làm Y — bằng chứng: <đường dẫn>". Không có bằng chứng thì không phải lesson.
+Language: the project language is `language:` in `research/PROJECT.md`; if it is blank, the plugin default `${user_config.language}` (if that still shows as the literal text `${user_config.language}`, the option is unset: use English) (rules in ${CLAUDE_PLUGIN_ROOT}/playbooks/language.md). Reply to the user in the language they write in. Put `language: <code>` in every TASK BRIEF.
 
-Đối số (số ngày): $ARGUMENTS
+Rules that always hold:
+- A lesson enters `LESSONS.md` only when the user approves it. At most 3 lessons per retro. `LESSONS.md` is capped at 50 lines: adding one means merging or dropping one.
+- A lesson has the form "when X do Y — evidence: <path>". With no evidence it is not a lesson.
 
-## Bước
+Argument (number of days): $ARGUMENTS
 
-1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/retro_digest.py --days <số ngày, mặc định 7>`. Đọc output, `research/PROJECT.md`, `research/lessons/LESSONS.md`, `research/lessons/squad-issues.md`.
-2. Viết nháp `research/lessons/retros/<YYYY-MM-DD>.md` theo ${CLAUDE_PLUGIN_ROOT}/templates/retro.md:
-   - bốn mục Schulman: experimental findings, insights, code progress, next steps;
-   - bảng đối chiếu next steps của retro trước (digest đã trích);
-   - calibration (copy từ digest);
-   - số việc dở dang (Schulman: chuyển bài toán quá thường xuyên là lỗi phổ biến hơn bám quá lâu).
-3. Hỏi người dùng các câu review của Nanda, **mỗi lượt tối đa 3 câu**: mục tiêu tuần và tiến được bao nhiêu; cái gì ngốn thời gian, cái gì chặn; sai lầm nào và đổi cách làm ra sao; đang rối ở đâu; nhịp làm việc có bền không. Ghi câu trả lời vào file retro.
-4. Đề xuất tối đa 3 lesson theo dạng trên. Người dùng duyệt từng cái. Lesson được duyệt → thêm vào `LESSONS.md` (kiểm trần 50 dòng); lesson nào nên thành sửa playbook thì ghi vào `squad-issues.md` dạng việc cần làm.
-5. Lỗi của chính các agent trong tuần (RECEIPT sai mẫu, vượt ngân sách, bịa, bỏ qua playbook) → thêm dòng vào `research/lessons/squad-issues.md`.
-6. Đề nghị cập nhật `stage` trong `PROJECT.md` nếu digest cho thấy đã chuyển giai đoạn; chỉ sửa khi người dùng đồng ý.
-7. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/notebook.py add --source retro "<đường dẫn retro>; <n> lesson mới"`. Kết thúc bằng next steps cho tuần tới (tối đa 3).
+## Steps
+
+1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/retro_digest.py --days <number of days, default 7>`. Read the output, `research/PROJECT.md`, `research/lessons/LESSONS.md` and `research/lessons/squad-issues.md`.
+2. Draft `research/lessons/retros/<YYYY-MM-DD>.md` from ${CLAUDE_PLUGIN_ROOT}/templates/<language>/retro.md:
+   - Schulman's four parts: experimental findings, insights, code progress, next steps;
+   - the table checking last retro's next steps (the digest already extracted them);
+   - calibration (copy from the digest);
+   - the number of unfinished items (Schulman: switching problems too often is a more common mistake than sticking too long).
+3. Ask the user Nanda's review questions, **at most 3 per turn**: the goal this week and how far it got; what took time and what blocked; mistakes and what to change so they do not repeat; where you are confused; whether the pace is sustainable. Record the answers in the retro file.
+4. Propose at most 3 lessons in the form above. The user approves each. An approved lesson goes into `LESSONS.md` (check the 50-line cap); a lesson that should become a playbook fix goes into `squad-issues.md` as a to-do.
+5. Mistakes of the agents themselves this week (malformed RECEIPT, over budget, invention, ignored playbook) → add lines to `research/lessons/squad-issues.md`.
+6. Offer to update `stage` in `PROJECT.md` if the digest shows a stage change; edit only if the user agrees.
+7. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/notebook.py add --source retro "<retro path>; <n> new lessons"`. End with next steps for the coming week (at most 3).

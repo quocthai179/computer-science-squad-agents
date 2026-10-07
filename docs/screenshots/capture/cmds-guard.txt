@@ -1,0 +1,10 @@
+#!export LAB=$LAB_SCRIPTS
+#clear
+grep -E '^(status|prediction|kill_criteria):' research/experiments/e001-ls/PLAN.md
+python3 $LAB/runwrap.py --exp e001-ls --name ls0.2 --seed 0 -- python3 train.py 0.2
+# G3: PI đọc PLAN.md và duyệt
+sed -i 's/^status: draft/status: approved/' research/experiments/e001-ls/PLAN.md
+python3 $LAB/runwrap.py --exp e001-ls --name ls0.2 --seed 0 -- python3 train.py 0.2
+python3 $LAB/runwrap.py --exp e001-ls --name smoke --tag smoke --seed 0 -- python3 train.py 0.2 20
+for s in 0 1 2; do for v in 0 0.2; do python3 $LAB/runwrap.py --exp e001-ls --name ls$v --seed $s -- python3 train.py $v >/dev/null 2>&1; done; done
+python3 $LAB/ledger.py budget --exp e001-ls

@@ -6,12 +6,12 @@ usage: lint_report.py FILE [FILE ...] [--root DIR] [--sources GLOB ...]
 
 Errors (exit 1):
   placeholder   TODO/TBD/XXX/FIXME, "Conclusions Here", "[citation needed]", "???",
-                and unfilled template slots such as <tên paper> or <result>
+                and unfilled template slots such as <paper title> or <result>
   number        a decimal or percentage that appears in no evidence file:
                 experiments/*/tables/*.md, experiments/*/runs.jsonl metrics,
                 papers/cards/*.md, surveys/*/evidence.jsonl, plus --sources
-  novelty       "novel", "the first", "SOTA", "state of the art", "đầu tiên", "mới lạ",
-                "chưa ai" ... unless the idea card named by `idea:` in the claims.md
+  novelty       "novel", "the first", "SOTA", "state of the art" and their Vietnamese, Chinese,
+                French and Japanese equivalents (đầu tiên, 首次, le premier, 初めて ...) unless the idea card named by `idea:` in the claims.md
                 next to FILE has `closest_prior_work` filled in (or --allow-novelty)
 
 Skip a single line with an HTML comment containing `lint-ignore`.
@@ -24,14 +24,19 @@ import glob
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 from _lab import find_root, is_blank, read_frontmatter
 
 PLACEHOLDER = [
     (re.compile(r"\b(TODO|TBD|FIXME|XXX)\b"), "placeholder marker"),
-    (re.compile(r"conclusions?\s+here|insert\s+\w+(\s+\w+)?\s+here|lorem ipsum", re.I), "template filler"),
-    (re.compile(r"\[(citation needed|cần dẫn nguồn|cite)\]", re.I), "missing citation"),
+    (re.compile(r"conclusions?\s+here|insert\s+\w+(\s+\w+)?\s+here|lorem ipsum|kết luận ở đây|"
+                r"此处(填写|填入|添加)|在此(填写|填入)|待(补充|填写|完善)|"
+                r"conclusions?\s+ici|à (compléter|remplir)\b|insérer\s+\w+(\s+\w+)?\s+ici|"
+                r"ここに(結論|記入|記載|入力)|(要記入|未記入|記入予定)", re.I), "template filler"),
+    (re.compile(r"\[(citation needed|cần dẫn nguồn|cite|citation nécessaire|source nécessaire|需要引用|引用待补|"
+                r"要出典|引用必要)\]", re.I), "missing citation"),
     (re.compile(r"\?\?\?"), "???"),
 ]
 ANGLE = re.compile(r"<(?!!--)(?!/)([^<>\n]{1,80})>")
@@ -41,14 +46,36 @@ HTML_TAG = re.compile(
     r"(\s+[a-zA-Z:-]+(=(\"[^\"]*\"|'[^']*'|\S+))?)*\s*/?$", re.I | re.A)
 
 NOVELTY = re.compile(
+    # English
     r"\bnovel(ty)?\b|\bthe first\b|\bfirst (to|work|method|approach|paper)\b|\bSOTA\b|"
     r"state[- ]of[- ]the[- ]art|\bunprecedented\b|\bgroundbreaking\b|"
+    # Vietnamese
     r"(công trình|phương pháp|nghiên cứu|cách tiếp cận|kết quả) đầu tiên|là đầu tiên|"
-    r"mới lạ|chưa (ai|từng có ai|có công trình nào)|vượt (qua )?SOTA",
+    r"mới lạ|chưa (ai|từng có ai|có công trình nào)|vượt (qua )?SOTA|"
+    # Chinese
+    r"首(次|个|创)|第一个|前所未有|全新的?方法|最先进|最新水平|开创性|开拓性|颠覆性|新颖|无人(做过|研究)|"
+    # French (\"état de l'art\" alone means \"literature review\", so only the claims are flagged)
+    r"\bnovat(eur|eurs|rice|rices)\b|\binédit(e|s|es)?\b|\ble premier\b|\bla première\b|\bpremier(e)? à\b|"
+    r"\bsans précédent\b|\brévolutionnaire\b|(dépasse|surpasse|bat|nouvel) l[’']état de l[’']art|"
+    r"nouvel état de l[’']art|"
+    # Japanese
+    r"初(めて|の)|新規(性|な手法)|斬新|画期的|前例(のない|がない)|最先端|世界初|誰も(行って|試して)いない|"
+    r"SOTAを(上回|超え|更新)",
     re.I,
 )
 
-NUM = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)+|\d+)(\s?%)?(?![\w])")
+# ASCII-only boundaries: in Chinese and Japanese a digit sits directly next to letters (精度は0.913です).
+# The percent sign may follow a space, a no-break space or a narrow no-break space (French: "12,5 %"),
+# or be full-width (％).
+NUM = re.compile(r"(?<![A-Za-z0-9_.,])(\d+(?:[.,]\d+)+|\d+)([\s\u00a0\u202f]?[%％])?(?![A-Za-z0-9_])")
+_FR_THOUSANDS = re.compile(r"(?<=\d)[\u00a0\u202f](?=\d{3}(?!\d))|(?<![\d.,])(\d{1,3}) (?=\d{3}[.,]\d)")
+
+
+def norm_numbers(line: str) -> str:
+    """Full-width digits to ASCII, and French '1 234,5' (space / no-break space grouping) to '1234,5'."""
+    line = unicodedata.normalize("NFKC", line)
+    line = _FR_THOUSANDS.sub(lambda m: m.group(1) or "", line)
+    return line
 STRIP = [
     re.compile(r"```.*?```", re.S),
     re.compile(r"<!--.*?-->", re.S),
@@ -58,7 +85,9 @@ STRIP = [
     re.compile(r"https?://\S+"),
     re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
     re.compile(r"§\s*\d+(\.\d+)*"),
-    re.compile(r"\b(Tab|Table|Fig|Figure|Eq|Section|Sec|Bảng|Hình|Mục|Phụ lục|Appendix)\.?\s*[A-Z]?\d+(\.\d+)*", re.I),
+    re.compile(r"\b(Tab|Table|Tableau|Fig|Figure|Eq|Équation|Section|Sec|Bảng|Hình|Mục|Phụ lục|Appendix|Annexe)"
+               r"\.?\s*[A-Z]?\d+(\.\d+)*", re.I),
+    re.compile(r"(表|图|圖|図|第|附录|附錄|付録|節|章)\s*[A-Z]?\d+(\.\d+)*"),
     re.compile(r"\bv\d+(\.\d+)+\b"),
     re.compile(r"\b\d{4}\.\d{4,5}(v\d+)?\b"),  # arXiv ids
     re.compile(r"\b[\w-]+-r\d{3}\b"),          # run ids
@@ -99,7 +128,7 @@ def evidence_values(root: Path, extra: list[str]) -> list[float]:
     vals: list[float] = []
 
     def from_text(t: str) -> None:
-        for m in NUM.finditer(t):
+        for m in NUM.finditer(norm_numbers(t)):
             vals.extend(interpretations(m.group(1)))
 
     files = glob.glob(str(root / "experiments" / "*" / "tables" / "*.md"))
@@ -167,7 +196,7 @@ def lint(path: Path, root: Path, evidence: list[float] | None, allow_novelty: bo
                     errs.append(f"{path}:{n}: novelty: '{m.group(0).strip()}' needs a checked closest prior "
                                 f"work (idea card `closest_prior_work`) or must be removed")
         if evidence is not None:
-            for m in NUM.finditer(line):
+            for m in NUM.finditer(norm_numbers(line)):
                 tok, pct = m.group(1), bool(m.group(2))
                 if should_check(tok, pct) and not number_ok(tok, pct, evidence):
                     errs.append(f"{path}:{n}: number: '{tok}{m.group(2) or ''}' is not in any table, ledger or "

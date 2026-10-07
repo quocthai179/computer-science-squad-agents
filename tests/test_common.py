@@ -53,3 +53,9 @@ def test_parse_arxiv_id():
 def test_slugify():
     assert slugify("Attention Is All You Need!") == "attention-is-all-you-need"
     assert slugify("???") == "item"
+
+
+def test_frontmatter_comment_after_list_or_quote():
+    meta, _ = parse_frontmatter("---\nprotected_files: [eval.py, \"a b.py\"]   # eval + data\nseeds: []    # none yet\n"
+                                "t: \"x # y\"   # note\nu: plain   # note\n---\n")
+    assert meta == {"protected_files": ["eval.py", "a b.py"], "seeds": [], "t": "x # y", "u": "plain"}

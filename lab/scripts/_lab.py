@@ -20,6 +20,51 @@ from typing import Any, Iterable
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN_ROOT / "templates"
 
+# --------------------------------------------------------------------------- languages
+# Instructions (agents, skills, playbooks, script output) are English. What is localised is the
+# content written into the workspace: templates and everything the agents write from them.
+# Machine keys (frontmatter keys, JSONL fields, file names, ids, [@..]/[run:..] anchors) never change.
+SUPPORTED_LANGS = ("en", "vi", "zh", "fr", "ja")
+DEFAULT_LANG = "en"
+LANG_NAMES = {"en": "English", "vi": "Tiếng Việt", "zh": "中文（简体）", "fr": "Français", "ja": "日本語"}
+_LANG_ALIASES = {
+    "en": "en", "eng": "en", "english": "en", "en-us": "en", "en-gb": "en",
+    "vi": "vi", "vie": "vi", "vietnamese": "vi", "tiếng việt": "vi", "tieng viet": "vi", "vi-vn": "vi",
+    "zh": "zh", "chinese": "zh", "中文": "zh", "汉语": "zh", "漢語": "zh", "zh-cn": "zh", "zh-hans": "zh",
+    "zh-tw": "zh", "zh-hant": "zh", "zh-sg": "zh", "simplified chinese": "zh", "mandarin": "zh",
+    "fr": "fr", "fra": "fr", "french": "fr", "français": "fr", "francais": "fr", "fr-fr": "fr", "fr-ca": "fr",
+    "ja": "ja", "jp": "ja", "jpn": "ja", "japanese": "ja", "日本語": "ja", "ja-jp": "ja",
+}
+
+
+def normalize_lang(value) -> str | None:
+    """'Vietnamese', 'vi-VN', 'français', '日本語' ... -> 'vi'/'fr'/'ja'; None when unknown or blank."""
+    if value is None:
+        return None
+    key = str(value).strip().strip("\"'").lower().replace("_", "-")
+    return _LANG_ALIASES.get(key)
+
+
+def resolve_language(root: Path | None, default: str | None = None, explicit: str | None = None) -> str:
+    """Order: explicit value -> `language:` in research/PROJECT.md -> default -> English."""
+    # an unset plugin option reaches skills and agents as the literal text `${user_config.language}`
+    if default is not None and ("${" in str(default) or "user_config" in str(default)):
+        default = None
+    for cand in (explicit, (read_frontmatter(root / "PROJECT.md").get("language") if root else None), default):
+        if cand is None or is_blank(cand):
+            continue
+        code = normalize_lang(cand)
+        if code:
+            return code
+        die(f"unsupported language '{cand}'. Supported: {', '.join(SUPPORTED_LANGS)}")
+    return DEFAULT_LANG
+
+
+def template_path(name: str, lang: str = DEFAULT_LANG) -> Path:
+    """templates/<lang>/<name>, falling back to English when a translation is missing."""
+    p = TEMPLATES / lang / name
+    return p if p.exists() else TEMPLATES / DEFAULT_LANG / name
+
 
 # --------------------------------------------------------------------------- workspace
 
@@ -175,9 +220,16 @@ def parse_frontmatter(text: str) -> tuple[dict, str]:
 
 
 def _strip_comment(v: str) -> str:
+    """Drop a trailing `# comment`, also after a closing quote or bracket (`[a, b]   # note`)."""
     v = v.strip()
-    if v[:1] in "\"'[":
-        return v
+    if not v or v.startswith("#"):
+        return ""
+    if v[0] in "\"'":
+        end = v.find(v[0], 1)
+        return v[: end + 1] if end > 0 else v
+    if v[:1] == "[":
+        end = v.rfind("]", 0, v.find(" #") if " #" in v else len(v))
+        return v[: end + 1] if end > 0 else v
     return re.sub(r"\s+#.*$", "", v)
 
 

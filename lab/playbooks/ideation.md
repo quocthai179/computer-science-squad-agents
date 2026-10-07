@@ -1,44 +1,44 @@
 # Ideation playbook
 
-Khung: generate → reflect → rank → evolve → meta-review (AI co-scientist), với người dùng là người xếp hạng.
+Frame: generate → reflect → rank → evolve → meta-review (AI co-scientist), with the user as the ranker.
 
-## Hạt giống đa dạng
+## Diverse seeds
 
-Sinh thêm mẫu từ cùng một prompt chỉ cho ra bản trùng (Si et al. 2024: rất ít ý tưởng không trùng nhau trong hàng nghìn mẫu). Đa dạng hoá *đầu vào*:
+Sampling more from the same prompt only returns duplicates (Si et al. 2024: very few of thousands of generated ideas were unique). Diversify the *inputs*:
 
-- `research/surveys/*/gaps.md` và mục câu hỏi mở của survey;
-- bất thường và "vì sao không chạy" trong `experiments/*/FINDINGS.md` cũ;
-- `research/ideas/backlog.md` (Hamming: 10–20 bài toán quan trọng);
-- mục "Lợi thế riêng" trong `PROJECT.md`;
-- một ràng buộc cụ thể, ví dụ "pilot chạy được trong một giờ trên máy hiện có";
-- "replicate rồi extend" một paper đã có card: điểm khởi đầu hợp lệ cho người mới (Nanda, Silver).
+- `research/surveys/*/gaps.md` and the survey's open questions;
+- anomalies and "why it did not run" in old `experiments/*/FINDINGS.md`;
+- `research/ideas/backlog.md` (Hamming: 10–20 important problems);
+- the "Unfair advantage" section of `PROJECT.md`;
+- one concrete constraint, for example "the pilot must run in an hour on the current machine";
+- "replicate then extend" a paper that already has a card: a legitimate starting point for beginners (Nanda, Silver).
 
-Mỗi idea card ghi `seeds:` để biết nó sinh từ đâu.
+Each idea card records `seeds:` so you can see where it came from.
 
-## Chất lượng một idea card
+## What makes a good idea card
 
-- Goal-driven hơn idea-driven (Schulman): nói rõ mục tiêu nó phục vụ.
-- "10% hay 10×?" Cải tiến càng nhỏ, phương pháp càng phải đơn giản.
-- Có `prediction` đo được và phép thử rẻ nhất ≤ 1 ngày.
-- Có kill criteria.
-- Nhãn `safe` hoặc `ambitious`; một lô nên có cả hai.
+- Goal-driven rather than idea-driven (Schulman): say which goal it serves.
+- "10% or 10×?" The smaller the improvement, the simpler the method must be.
+- A measurable `prediction` and a cheapest test of at most 1 day.
+- Kill criteria.
+- A `safe` or `ambitious` label; a batch should contain both.
 
 ## Novelty protocol (skeptic)
 
-1. Giả định đã có người làm.
-2. Tìm prior work gần nhất: ít nhất 3 query khác nhau (thuật ngữ của ý tưởng, thuật ngữ của lĩnh vực lân cận, mô tả bằng lời thường).
-3. Nếu ánh xạ phương pháp gần như một-một, nói thẳng và ghi ánh xạ.
-4. Ghi trong review một dòng `closest_prior_work[<idea-id>]: ...` cho mỗi card, kể cả khi kết luận là "không tìm thấy gì gần" (ghi query đã dùng). Lead chép dòng đó vào frontmatter `closest_prior_work` của card; `lint_report.py` dựa vào trường này.
-5. Nêu lý do mạnh nhất khiến ý tưởng thất bại.
+1. Assume someone has already done it.
+2. Find the closest prior work: at least 3 different queries (the idea's own terminology, terminology of a neighbouring field, a plain-language description).
+3. If the method mapping is nearly one-to-one, say so and write the mapping.
+4. In the review write one line `closest_prior_work[<idea-id>]: ...` per card, even when the conclusion is "nothing close found" (give the queries). The Lead copies the line into the card's `closest_prior_work` frontmatter field; `lint_report.py` relies on that field.
+5. State the strongest reason the idea could fail.
 
-Gupta & Pruthi: một phần đáng kể tài liệu nghiên cứu do LLM sinh bị chuyên gia xác định là vay mượn không ghi nguồn, và công cụ tự động không bắt được. Người dùng chịu trách nhiệm mọi tuyên bố novelty.
+Gupta & Pruthi: a substantial share of LLM-generated research documents were judged by experts to be paraphrased or borrowed without credit, and automated tools did not catch it. The user owns every novelty claim.
 
-## Xếp hạng
+## Ranking
 
-LLM xếp hạng ý tưởng chỉ khớp người ở mức gần ngẫu nhiên. Agent có thể đưa thứ tự gợi ý kèm lý do, nhưng **G2 do người dùng chấm 1–10** (`user_score`) trước khi xem điểm gợi ý nếu được.
+LLM rankings of ideas agree with humans at close to chance level. Agents may give a suggested order with reasons, but **G2 is the user scoring 1–10** (`user_score`), ideally before seeing the suggested order.
 
-Phép thử nhanh (Olah): nếu nhóm khác công bố đúng ý này, bạn có háo hức đọc không?
+Quick test (Olah): if another group published exactly this idea, would you be excited to read it?
 
-## Sau G2
+## After G2
 
-Ý tưởng được chọn đi thẳng sang pilot tối đa một ngày (`/lab:design-exp`), vì ý tưởng hay trên giấy thường tụt điểm sau khi thực thi (Si et al. 2025). Ý tưởng bị loại vẫn giữ card với `status: killed` và lý do.
+The selected idea goes straight into a pilot of at most one day (`/lab:design-exp`), because ideas that look good on paper often drop after execution (Si et al. 2025). Rejected ideas keep their card with `status: killed` and the reason.
