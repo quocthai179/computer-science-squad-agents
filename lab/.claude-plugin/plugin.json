@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "lab",
+  "displayName": "Research Squad",
+  "version": "0.1.0",
+  "description": "Đội agent hỗ trợ nghiên cứu AI/ML: khảo sát, đọc paper, thí nghiệm, viết, rút kinh nghiệm",
+  "author": { "name": "Thai Huynh" },
+  "repository": "https://github.com/quocthai179/computer-science-squad-agents",
+  "license": "MIT",
+  "keywords": ["research", "machine-learning", "literature-review", "experiments", "multi-agent", "vietnamese"]
+}
